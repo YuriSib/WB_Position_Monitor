@@ -42,4 +42,10 @@ async def union_table():
 
 
 async def create_result_table(result_dict):
-    pass
+    with open(path_to_result_table, 'w', newline='', encoding="utf-8") as csvfile:
+        wither = csv.writer(csvfile, delimiter=";")
+        wither.writerow(['Артикул', 'Поисковый запрос', 'Позиция в выдаче'])
+        for key in result_dict:
+            for value in result_dict[key]:
+                qwery_key, position = value[0], value[1]
+                wither.writerow([key, qwery_key, position])

@@ -5,8 +5,8 @@ import os
 
 import WB_Position_Monitor.app.keyboards as kb
 from WB_Position_Monitor.WB_scrapper import WBMonitor
-from WB_Position_Monitor.table_work import (get_searching_data, union_table, path_to_table,
-                                            path_to_add_table, path_to_result_table)
+from WB_Position_Monitor.table_work import (get_searching_data, union_table, create_result_table,
+                                            path_to_table, path_to_add_table, path_to_result_table)
 
 router = Router()
 bot = Bot(token='7192705317:AAHYlGUZTtmB7v5AtRyegt8neYMkTf1kmvg')
@@ -111,7 +111,7 @@ async def start_monitoring(callback: CallbackQuery, bot):
             positions = await monitoring()
             await bot.send_message(chat_id=user_id, text=str(positions))
 
-            print(positions)
+            await create_result_table(positions)
 
             if os.path.exists(path_to_result_table):
                 file_input = FSInputFile(path_to_result_table)
