@@ -1,19 +1,4 @@
 import requests
-import openpyxl
-
-
-def get_searching_data():
-    wb = openpyxl.load_workbook('Позиции по поисковым запросам.xlsx')
-    ws = wb.active
-
-    max_row = ws.max_row
-    searching_data = {}
-    for row in range(2, max_row+1):
-        article = ws.cell(row=row, column=1).value
-        qwery_list = ws.cell(row=row, column=2).value.split(', ')
-        searching_data[article] = qwery_list
-
-    return searching_data
 
 
 class WBMonitor:
@@ -71,7 +56,7 @@ class WBMonitor:
                 cnt += 1
             return False
 
-    def hoarder(self, qwery_key):
+    async def hoarder(self, qwery_key):
         page_num = 1
         position_num = 1
         finish_flag = False
@@ -88,17 +73,17 @@ class WBMonitor:
             if position:
                 return position
             else:
-                if finish_flag or (position_num+100) > 1000:
+                if finish_flag or (position_num+100) > 2000:
                     return 'Не удалось установить позицию'
                 page_num += 1
                 position_num += 100
                 print(f'Перебрано {position_num-1} карточек')
 
 
-if __name__ == "__main__":
-    key = 'футболка женская'
-    target_article = 206854348
-    wbm = WBMonitor(target_article=target_article)
-    num_position = wbm.hoarder(key)
-    print(f'Позиция артикула {target_article} по запросу "{key}" - {num_position}')
+# if __name__ == "__main__":
+    # key = 'футболка женская'
+    # target_article = 206854348
+    # wbm = WBMonitor(target_article=target_article)
+    # num_position = wbm.hoarder(key)
+    # print(f'Позиция артикула {target_article} по запросу "{key}" - {num_position}')
     # print(get_searching_data())
