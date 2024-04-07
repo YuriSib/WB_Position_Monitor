@@ -63,7 +63,12 @@ class WBMonitor:
         while True:
             response = self.settings(page=page_num, key=qwery_key)
 
-            quantity_cards = len(response['data']['products'])
+            try:
+                quantity_cards = len(response['data']['products'])
+            except KeyError:
+                print(f'KeyError')
+                finish_flag = True
+                quantity_cards = 100
             if quantity_cards == 1:
                 continue
             if quantity_cards != 100:
@@ -74,7 +79,7 @@ class WBMonitor:
                 return position
             else:
                 if finish_flag or (position_num+100) > 2000:
-                    return 'Не удалось установить позицию'
+                    return 'Не удалось установить позицию >2000'
                 page_num += 1
                 position_num += 100
                 print(f'Перебрано {position_num-1} карточек')
