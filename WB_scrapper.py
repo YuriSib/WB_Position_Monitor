@@ -65,10 +65,9 @@ class WBMonitor:
 
             try:
                 quantity_cards = len(response['data']['products'])
-            except KeyError:
-                print(f'KeyError')
-                finish_flag = True
-                quantity_cards = 100
+            except Exception as e:
+                print(e)
+                return 'Не найдено из-за ошибки'
             if quantity_cards == 1:
                 continue
             if quantity_cards != 100:
@@ -78,8 +77,9 @@ class WBMonitor:
             if position:
                 return position
             else:
-                if finish_flag or (position_num+100) > 2000:
-                    return 'Не удалось установить позицию >2000'
+                max_position = 4000
+                if finish_flag or (position_num+100) > max_position:
+                    return f'>{max_position}'
                 page_num += 1
                 position_num += 100
                 print(f'Перебрано {position_num-1} карточек')

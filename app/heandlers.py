@@ -4,16 +4,16 @@ import asyncio
 import os
 import datetime
 
-import WB_Position_Monitor.app.keyboards as kb
-from WB_Position_Monitor.WB_scrapper import WBMonitor
-from WB_Position_Monitor.table_work import (get_searching_data, union_table, create_result_table,
-                                            path_to_table, path_to_add_table, path_to_result_table)
-
-# # Импорты для сервера
-# import app.keyboards as kb
-# from WB_scrapper import WBMonitor
-# from table_work import (get_searching_data, union_table, create_result_table,
+# import WB_Position_Monitor.app.keyboards as kb
+# from WB_Position_Monitor.WB_scrapper import WBMonitor
+# from WB_Position_Monitor.table_work import (get_searching_data, union_table, create_result_table,
 #                                             path_to_table, path_to_add_table, path_to_result_table)
+
+# Импорты для сервера
+import app.keyboards as kb
+from WB_scrapper import WBMonitor
+from table_work import (get_searching_data, union_table, create_result_table,
+                                            path_to_table, path_to_add_table, path_to_result_table)
 
 router = Router()
 bot = Bot(token='7192705317:AAHYlGUZTtmB7v5AtRyegt8neYMkTf1kmvg')
@@ -123,7 +123,7 @@ async def start_monitoring(callback: CallbackQuery, bot):
             positions = await monitoring()
             end_time = datetime.datetime.now()
             execution_time = end_time - start_time
-            await bot.send_message(chat_id=user_id, text=f'{str(positions)}\nПарсинг занял {execution_time} секунд')
+            await bot.send_message(chat_id=user_id, text=f'Время парсинга: {execution_time}')
 
             await create_result_table(positions)
 
@@ -180,13 +180,13 @@ async def stop_monitoring(callback: CallbackQuery, bot):
 async def get_csv(message: Message):
     document = message.document
     file_id = document.file_id
-    file_name = document.file_name
+    file_name = 'Позиции по поисковым запросам.csv'
 
     file = await bot.get_file(file_id)
     file_path = file.file_path
 
     await bot.download_file(file_path, destination=f"./{file_name}")
-    await message.reply(f"Файл {file_name} успешно сохранен.")
+    await message.reply(f"Файл успешно сохранен.")
 
 
 @router.message(F.text == '/my_id')
