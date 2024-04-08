@@ -6,10 +6,14 @@ import os
 # path_to_add_table = r"C:\Users\Administrator\PycharmProjects\WB_bot\WB_Position_Monitor\Добавление.csv"
 # path_to_result_table = r"C:\Users\Administrator\PycharmProjects\WB_bot\WB_Position_Monitor\Результат.csv"
 
+path_to_table = r"C:\Users\User\PycharmProjects\WB_Position_Monitoring\Позиции по поисковым запросам.csv"
+path_to_add_table = r"C:\Users\User\PycharmProjects\WB_Position_Monitoring\Добавление.csv"
+path_to_result_table = r"C:\Users\User\PycharmProjects\WB_Position_Monitoring\Результат.csv"
+
 # Пути для сервера
-path_to_table = r"/root/WB_checker/WB_Position_Monitor/Позиции по поисковым запросам.csv"
-path_to_add_table = r"/root/WB_checker/WB_Position_Monitor/Добавление.csv"
-path_to_result_table = r"/root/WB_checker/WB_Position_Monitor/Результат.csv"
+# path_to_table = r"/root/WB_checker/WB_Position_Monitor/Позиции по поисковым запросам.csv"
+# path_to_add_table = r"/root/WB_checker/WB_Position_Monitor/Добавление.csv"
+# path_to_result_table = r"/root/WB_checker/WB_Position_Monitor/Результат.csv"
 
 
 async def get_searching_data(table='Позиции по поисковым запросам.csv'):

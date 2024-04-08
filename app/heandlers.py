@@ -16,7 +16,7 @@ from table_work import (get_searching_data, union_table, create_result_table,
                                             path_to_table, path_to_add_table, path_to_result_table)
 
 router = Router()
-bot = Bot(token='7192705317:AAHYlGUZTtmB7v5AtRyegt8neYMkTf1kmvg')
+bot = Bot(token='6419841809:AAFEiToc-LKefUbh7nkzEiusYGnHgA0NAK8')
 
 flag_monitoring = False
 search_filter = {}
@@ -89,19 +89,22 @@ async def monitoring():
 
     global flag_monitoring
     positions = {}
-    for article in searching_data:
-        wbm = WBMonitor(target_article=article)
-        qwery_positions = []
-        for qwery in searching_data.get(article):
-            if not flag_monitoring:
-                return False
+    positions_list = []
+    for article, qwery_keys in searching_data.items():
+        for key in qwery_keys:
+            wbm = WBMonitor(key=key)
+            qwery_positions = []
+            for qwery in searching_data.get(article):
+                if not flag_monitoring:
+                    return False
 
-            num_position = await wbm.hoarder(qwery)
-            print(f'Позиция артикула {article} по запросу "{qwery}" - {num_position}')
-            qwery_positions.append((qwery, num_position))
-        positions[f'{article}'] = qwery_positions
+                num_position = await wbm.hoarder(qwery)
+                print(f'Позиция артикула {article} по запросу "{qwery}" - {num_position}')
+                qwery_positions.append((qwery, num_position))
+                positions_list.append(f'{article}; {qwery}; {num_position}')
+            positions[f'{article}'] = qwery_positions
 
-    return positions
+    return positions, positions_list
 
 
 @router.callback_query(lambda callback_query: callback_query.data.startswith('start_monitoring'))
@@ -120,10 +123,11 @@ async def start_monitoring(callback: CallbackQuery, bot):
 
         while flag_monitoring:
             start_time = datetime.datetime.now()
-            positions = await monitoring()
+            positions, positions_list = await monitoring()
             end_time = datetime.datetime.now()
             execution_time = end_time - start_time
             await bot.send_message(chat_id=user_id, text=f'Время парсинга: {execution_time}')
+            await bot.send_message(chat_id=user_id, text='\n'.join(positions_list))
 
             await create_result_table(positions)
 
@@ -153,7 +157,7 @@ async def start_monitoring(callback: CallbackQuery, bot):
 
 
 @router.callback_query(lambda callback_query: callback_query.data.startswith('download'))
-async def cb_choice_year(callback: CallbackQuery, bot):
+async def download(callback: CallbackQuery, bot):
     await bot.delete_message(chat_id=callback.from_user.id, message_id=callback.message.message_id)
     if os.path.exists(path_to_result_table):
         file_input = FSInputFile(path_to_result_table)

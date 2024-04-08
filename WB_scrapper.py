@@ -2,10 +2,10 @@ import requests
 
 
 class WBMonitor:
-    def __init__(self, target_article):
+    def __init__(self, key):
         # self.id_list = id_list
-        # self.key = key
-        self.target_article = target_article
+        self.key = key
+        # self.target_article = target_article
 
     @staticmethod
     def settings(page, key):
@@ -45,23 +45,26 @@ class WBMonitor:
 
     @staticmethod
     def find_position(response, target_article, cnt=1):
+        position_dict = {}
         products_raw = response.get('data', {}).get('products', None)
         if products_raw != None and len(products_raw) > 0:
             for product in products_raw:
                 # name = product.get('name', None)
                 article = product.get('id', None)
-                if article == target_article:
-                    print(product.get('name', None))
-                    return cnt
+                if article in target_article:
+                    print(product.get('name', None), cnt)
+                    position_dict[article] = cnt
                 cnt += 1
-            return False
+            return position_dict
 
-    async def hoarder(self, qwery_key):
+    def hoarder(self, target_article_list):
+        max_position = 4000
         page_num = 1
         position_num = 1
         finish_flag = False
+        full_position_dict = {}
         while True:
-            response = self.settings(page=page_num, key=qwery_key)
+            response = self.settings(page=page_num, key=self.key)
 
             try:
                 quantity_cards = len(response['data']['products'])
@@ -73,22 +76,31 @@ class WBMonitor:
             if quantity_cards != 100:
                 finish_flag = True
 
-            position = self.find_position(response=response, target_article=self.target_article, cnt=position_num) if response else []
-            if position:
-                return position
+            position_dict = self.find_position(response=response, target_article=target_article_list, cnt=position_num) if response else []
+            full_position_dict.update(position_dict)
+            for id_ in position_dict:
+                if id_ in target_article_list:
+                    target_article_list.remove(id_)
+
+            if not target_article_list:
+                return full_position_dict
+
             else:
-                max_position = 4000
                 if finish_flag or (position_num+100) > max_position:
-                    return f'>{max_position}'
+                    not_found_id_dict = {}
+                    for id_ in target_article_list:
+                        not_found_id_dict[id_] = f'>{max_position}'
+                    full_position_dict.update(not_found_id_dict)
+                    return full_position_dict
+
                 page_num += 1
                 position_num += 100
                 print(f'Перебрано {position_num-1} карточек')
 
 
-# if __name__ == "__main__":
-    # key = 'футболка женская'
-    # target_article = 206854348
-    # wbm = WBMonitor(target_article=target_article)
-    # num_position = wbm.hoarder(key)
-    # print(f'Позиция артикула {target_article} по запросу "{key}" - {num_position}')
-    # print(get_searching_data())
+if __name__ == "__main__":
+    key = 'Колготки для девочки набор'
+    target_article = [166178136, 200435939, 166178164, 166178436, 166177702, 166178312]
+    wbm = WBMonitor(key=key)
+    num_position = wbm.hoarder(target_article)
+    print(f'Позиция артикула {target_article} по запросу "{key}" - {num_position}')
