@@ -18,11 +18,6 @@ start_monitoring = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='В начало', callback_data='begin')]
 ])
 
-stop_monitoring = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text='Остановить мониторинг', callback_data='stop_monitoring')]
-])
-
-
 step2_v1 = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='Перезаписать таблицу', callback_data='write'),
      InlineKeyboardButton(text='Дополнить таблицу', callback_data='append')],

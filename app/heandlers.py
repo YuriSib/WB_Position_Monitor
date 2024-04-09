@@ -9,16 +9,15 @@ import datetime
 # from WB_Position_Monitor.table_work import (get_searching_data, union_table, create_result_table,
 #                                             path_to_table, path_to_add_table, path_to_result_table)
 
-# Импорты для сервера
+# # Импорты для сервера
 import app.keyboards as kb
 from WB_scrapper import WBMonitor
 from table_work import (get_searching_data, union_table, create_result_table,
                                             path_to_table, path_to_add_table, path_to_result_table)
 
 router = Router()
-bot = Bot(token='6419841809:AAFEiToc-LKefUbh7nkzEiusYGnHgA0NAK8')
+bot = Bot(token='7192705317:AAHYlGUZTtmB7v5AtRyegt8neYMkTf1kmvg')
 
-flag_monitoring = False
 search_filter = {}
 
 
@@ -30,25 +29,20 @@ async def step1_1(message: Message):
 @router.callback_query(lambda callback_query: callback_query.data.startswith('begin'))
 async def step_1_2(callback: CallbackQuery, bot):
 
-    global flag_monitoring
-    if flag_monitoring:
-        await bot.send_message(chat_id=callback.from_user.id, text='Мониторинг запущен, можете остановить его',
-                               reply_markup=kb.stop_monitoring)
+    if os.path.exists(path_to_table):
+        print(f"Файл {path_to_table} существует.")
+        await callback.answer('Есть таблица', show_alert=False)
+        await callback.message.answer(f'Есть таблица')
+        await bot.delete_message(chat_id=callback.from_user.id, message_id=callback.message.message_id)
+        await bot.send_message(chat_id=callback.from_user.id, text="Выберите, что делать с таблицей:",
+                               reply_markup=kb.step2_v1)
     else:
-        if os.path.exists(path_to_table):
-            print(f"Файл {path_to_table} существует.")
-            await callback.answer('Есть таблица', show_alert=False)
-            await callback.message.answer(f'Есть таблица')
-            await bot.delete_message(chat_id=callback.from_user.id, message_id=callback.message.message_id)
-            await bot.send_message(chat_id=callback.from_user.id, text="Выберите, что делать с таблицей:",
-                                   reply_markup=kb.step2_v1)
-        else:
-            print(f"Файл {path_to_table} не существует.")
-            await callback.answer('Таблицы нет', show_alert=False)
-            await callback.message.answer(f'Таблицы нет')
-            await bot.delete_message(chat_id=callback.from_user.id, message_id=callback.message.message_id)
-            await bot.send_message(chat_id=callback.from_user.id, text="Выберите, что делать с таблицей:",
-                                   reply_markup=kb.step2_v2)
+        print(f"Файл {path_to_table} не существует.")
+        await callback.answer('Таблицы нет', show_alert=False)
+        await callback.message.answer(f'Таблицы нет')
+        await bot.delete_message(chat_id=callback.from_user.id, message_id=callback.message.message_id)
+        await bot.send_message(chat_id=callback.from_user.id, text="Выберите, что делать с таблицей:",
+                               reply_markup=kb.step2_v2)
 
 
 @router.callback_query(lambda callback_query: callback_query.data.startswith('write'))
@@ -87,24 +81,52 @@ async def cb_choice_year(callback: CallbackQuery, bot):
 async def monitoring():
     searching_data = await get_searching_data()
 
-    global flag_monitoring
-    positions = {}
-    positions_list = []
-    for article, qwery_keys in searching_data.items():
-        for key in qwery_keys:
-            wbm = WBMonitor(key=key)
-            qwery_positions = []
-            for qwery in searching_data.get(article):
-                if not flag_monitoring:
-                    return False
+    all_keys_positions = []
+    while not all_keys_positions:
+        try:
+            cnt = 1
+            for qwery_key, articles in searching_data.items():
+                wbm = WBMonitor(key=qwery_key)
 
-                num_position = await wbm.hoarder(qwery)
-                print(f'Позиция артикула {article} по запросу "{qwery}" - {num_position}')
-                qwery_positions.append((qwery, num_position))
-                positions_list.append(f'{article}; {qwery}; {num_position}')
-            positions[f'{article}'] = qwery_positions
+                while True:
+                    keys_positions = await wbm.hoarder(articles)
+                    if type(keys_positions) is str:
+                        print(keys_positions, f'Итерация для ключа {qwery_key} начата заново')
+                        continue
+                    break
 
-    return positions, positions_list
+                try:
+                    qwery_positions = [f'{article};{qwery_key};{position}' for article, position in keys_positions.items()]
+                except AttributeError as e:
+                    print(e)
+                    print(keys_positions)
+                all_keys_positions = all_keys_positions + qwery_positions
+                print(cnt, qwery_key)
+                cnt += 1
+        except Exception as e:
+            await bot.send_message(chat_id=674796107, text=f'Ошибка {e}, итерация перезапущена!')
+            continue
+
+    return all_keys_positions
+
+
+@router.message(F.text == 'Запуск')
+async def start_monitoring(message: Message):
+    if os.path.exists(path_to_table):
+        print('Файл найден, можно мониторить')
+
+        start_time = datetime.datetime.now()
+        positions_list = await monitoring()
+        end_time = datetime.datetime.now()
+        execution_time = end_time - start_time
+
+        await message.answer('\n'.join(positions_list))
+        await bot.send_message(chat_id=674796107, text=f'Время парсинга: {execution_time}')
+        # await message.answer(f'Время парсинга: {execution_time}')
+
+    else:
+        await bot.send_message(chat_id=674796107, text='Файл не найден, мониторить нельзя')
+        print('Файл не найден, мониторить нельзя')
 
 
 @router.callback_query(lambda callback_query: callback_query.data.startswith('start_monitoring'))
@@ -114,40 +136,14 @@ async def start_monitoring(callback: CallbackQuery, bot):
     if os.path.exists(path_to_table):
         print('Файл найден, можно мониторить')
         await bot.delete_message(chat_id=user_id, message_id=callback.message.message_id)
-        await bot.send_message(chat_id=user_id, text='Начинаю мониторинг выдачи')
-        await bot.send_message(chat_id=callback.from_user.id, text="Вы можете остановить процесс, но это займет время",
-                               reply_markup=kb.stop_monitoring)
+        await bot.send_message(chat_id=user_id, text='Начинаю мониторинг выдачи...')
 
-        global flag_monitoring
-        flag_monitoring = True
-
-        while flag_monitoring:
-            start_time = datetime.datetime.now()
-            positions, positions_list = await monitoring()
-            end_time = datetime.datetime.now()
-            execution_time = end_time - start_time
-            await bot.send_message(chat_id=user_id, text=f'Время парсинга: {execution_time}')
-            await bot.send_message(chat_id=user_id, text='\n'.join(positions_list))
-
-            await create_result_table(positions)
-
-            if os.path.exists(path_to_result_table):
-                file_input = FSInputFile(path_to_result_table)
-                await bot.send_document(
-                    callback.from_user.id, file_input,
-                    caption=f'Текущий результат мониторинга')
-
-            if not flag_monitoring:
-                break
-
-            for min_ in range(60):
-                print(f'{60 - min_}')
-                await asyncio.sleep(60)
-                if not flag_monitoring:
-                    break
-
-        print('Мониторинг остановлен!')
-        await bot.send_message(chat_id=user_id, text='Мониторинг остановлен!')
+        start_time = datetime.datetime.now()
+        positions_list = await monitoring()
+        end_time = datetime.datetime.now()
+        execution_time = end_time - start_time
+        await bot.send_message(chat_id=callback.from_user.id, text='\n'.join(positions_list))
+        await bot.send_message(chat_id=callback.from_user.id, text=f'Время парсинга: {execution_time}')
 
     else:
         print('Файл не найден, мониторить нельзя')
@@ -168,16 +164,6 @@ async def download(callback: CallbackQuery, bot):
         await bot.send_message(chat_id=callback.from_user.id, text="Таблица пока не готова!")
         await bot.send_message(chat_id=callback.from_user.id, text="Скачать результат:",
                                reply_markup=kb.download_csv)
-
-
-@router.callback_query(lambda callback_query: callback_query.data.startswith('stop_monitoring'))
-async def stop_monitoring(callback: CallbackQuery, bot):
-    global flag_monitoring
-    flag_monitoring = False
-    print('Для флага установленно значение False')
-    await bot.send_message(chat_id=callback.from_user.id, text="Мониторинг остановлен!")
-    await bot.send_message(chat_id=callback.from_user.id, text="Скачать результат:",
-                           reply_markup=kb.step2_v1)
 
 
 @router.message(F.document)

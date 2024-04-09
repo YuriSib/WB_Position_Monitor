@@ -52,12 +52,11 @@ class WBMonitor:
                 # name = product.get('name', None)
                 article = product.get('id', None)
                 if article in target_article:
-                    print(product.get('name', None), cnt)
                     position_dict[article] = cnt
                 cnt += 1
             return position_dict
 
-    def hoarder(self, target_article_list):
+    async def hoarder(self, target_article_list):
         max_position = 4000
         page_num = 1
         position_num = 1
@@ -100,7 +99,7 @@ class WBMonitor:
 
 if __name__ == "__main__":
     key = 'Колготки для девочки набор'
-    target_article = [166178136, 200435939, 166178164, 166178436, 166177702, 166178312]
+    target_article = [166178136, 200435939, 166178164, 166178436, 166177702]
     wbm = WBMonitor(key=key)
     num_position = wbm.hoarder(target_article)
     print(f'Позиция артикула {target_article} по запросу "{key}" - {num_position}')

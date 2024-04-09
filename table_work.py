@@ -2,31 +2,50 @@ import csv
 import os
 
 
-# path_to_table = r"C:\Users\Administrator\PycharmProjects\WB_bot\WB_Position_Monitor\Позиции по поисковым запросам.csv"
-# path_to_add_table = r"C:\Users\Administrator\PycharmProjects\WB_bot\WB_Position_Monitor\Добавление.csv"
-# path_to_result_table = r"C:\Users\Administrator\PycharmProjects\WB_bot\WB_Position_Monitor\Результат.csv"
+path_to_table = r"C:\Users\Administrator\PycharmProjects\WB_bot\WB_Position_Monitor\Позиции по поисковым запросам.csv"
+path_to_add_table = r"C:\Users\Administrator\PycharmProjects\WB_bot\WB_Position_Monitor\Добавление.csv"
+path_to_result_table = r"C:\Users\Administrator\PycharmProjects\WB_bot\WB_Position_Monitor\Результат.csv"
 
-path_to_table = r"C:\Users\User\PycharmProjects\WB_Position_Monitoring\Позиции по поисковым запросам.csv"
-path_to_add_table = r"C:\Users\User\PycharmProjects\WB_Position_Monitoring\Добавление.csv"
-path_to_result_table = r"C:\Users\User\PycharmProjects\WB_Position_Monitoring\Результат.csv"
+# path_to_table = r"C:\Users\User\PycharmProjects\WB_Position_Monitoring\Позиции по поисковым запросам.csv"
+# path_to_add_table = r"C:\Users\User\PycharmProjects\WB_Position_Monitoring\Добавление.csv"
+# path_to_result_table = r"C:\Users\User\PycharmProjects\WB_Position_Monitoring\Результат.csv"
 
-# Пути для сервера
+# # Пути для сервера
 # path_to_table = r"/root/WB_checker/WB_Position_Monitor/Позиции по поисковым запросам.csv"
 # path_to_add_table = r"/root/WB_checker/WB_Position_Monitor/Добавление.csv"
 # path_to_result_table = r"/root/WB_checker/WB_Position_Monitor/Результат.csv"
 
 
 async def get_searching_data(table='Позиции по поисковым запросам.csv'):
-    searching_data = {}
-
     with open(table, newline='', encoding="utf-8") as csvfile:
         reader = csv.reader(csvfile, delimiter=";")
+        reader_list = [row for row in reader]
 
-        for row in reader:
-            article = int(row[0].replace('\ufeff', ''))
-            row.remove(row[0])
-            row.remove('') if '' in row else row
-            searching_data[article] = row
+        qwery_list = []
+        for row in reader_list:
+            cnt = 0
+            for i in row:
+                if cnt == 0:
+                    cnt += 1
+                    continue
+                if i not in qwery_list:
+                    qwery_list.append(i)
+
+        qwery_list.remove('')
+
+        searching_data = {}
+        for qwery in qwery_list:
+            for row_2 in reader_list:
+                art = int(row_2[0].replace('\ufeff', ''))
+                row_2.remove('') if '' in row_2 else row_2
+                if qwery in row_2:
+                    if searching_data:
+                        if qwery in searching_data:
+                            searching_data[qwery].append(art)
+                        else:
+                            searching_data[qwery] = [art]
+                    else:
+                        searching_data[qwery] = [art]
 
     return searching_data
 
