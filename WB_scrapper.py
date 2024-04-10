@@ -1,5 +1,4 @@
 import requests
-from geopy.geocoders import Nominatim
 
 
 class WBMonitor:
