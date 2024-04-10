@@ -1,4 +1,5 @@
 import requests
+from geopy.geocoders import Nominatim
 
 
 class WBMonitor:
@@ -14,7 +15,6 @@ class WBMonitor:
             'Accept-Language': 'ru,en;q=0.9',
             'Connection': 'keep-alive',
             'Origin': 'https://www.wildberries.ru',
-            'Referer': 'https://www.wildberries.ru/catalog/0/search.aspx?search=%D0%B1%D0%B0%D1%88%D0%BC%D0%B0%D0%BA%D0%B8',
             'Sec-Fetch-Dest': 'empty',
             'Sec-Fetch-Mode': 'cors',
             'Sec-Fetch-Site': 'cross-site',
@@ -22,7 +22,7 @@ class WBMonitor:
             'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120", "YaBrowser";v="24.1", "Yowser";v="2.5"',
             'sec-ch-ua-mobile': '?0',
             'sec-ch-ua-platform': '"Windows"',
-            'x-queryid': 'qid481473304171208404820240402185417',
+
         }
 
         params = {
@@ -37,8 +37,10 @@ class WBMonitor:
             'suppressSpellcheck': 'false',
             # 'limit': '300'
         }
-        response = requests.get('https://search.wb.ru/exactmatch/ru/common/v5/search', params=params,
-                                headers=headers, timeout=60)
+
+        url = 'https://search.wb.ru/exactmatch/ru/common/v5/search'
+
+        response = requests.get(url, params=params, headers=headers, timeout=60)
         if response.status_code != 200:
             return 0
         return response.json()
@@ -56,7 +58,7 @@ class WBMonitor:
                 cnt += 1
             return position_dict
 
-    async def hoarder(self, target_article_list):
+    def hoarder(self, target_article_list):
         max_position = 4000
         page_num = 1
         position_num = 1
@@ -99,7 +101,8 @@ class WBMonitor:
 
 if __name__ == "__main__":
     key = 'Колготки для девочки набор'
-    target_article = [166178136, 200435939, 166178164, 166178436, 166177702]
+    target_article = [166178136, 200435939, 166178164, 166178436]
     wbm = WBMonitor(key=key)
     num_position = wbm.hoarder(target_article)
-    print(f'Позиция артикула {target_article} по запросу "{key}" - {num_position}')
+    for key in num_position:
+        print(f'Позиция артикула {key} - {num_position[key]}')

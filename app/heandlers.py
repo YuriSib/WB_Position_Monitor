@@ -185,6 +185,14 @@ async def cmd_start(message: Message):
     await message.reply(f'Ваше имя: {message.from_user.first_name}')
 
 
-@router.message()
-async def echo(message: Message):
-    await message.answer('Введенный текст не является командой...')
+@router.message(F.text == 'Тестируй бота')
+async def test_communication(message: Message):
+    await message.answer("Отправляю тестовое сообщение боту")
+    await bot.send_message(chat_id=674796107, text=f'Боту напроавили тестовое сообщение')
+    await bot.send_message(chat_id=6511133702, text=f'Проверка')
+
+
+@router.message(F.text == 'Сообщение')
+async def test_2(message: Message):
+    await message.answer("Отправляю тестовое сообщение боту 2")
+    await bot.send_message(chat_id=674796107, text=f'ID бота - {message.from_user.id}')
